@@ -54,5 +54,17 @@ def clean_tweets(path, filename):
             txt_clean.write(line + '\n')
 
 
+def clean_tweets_without_dubl(path, filename):
+    txt_file = open(path + filename, encoding="utf8")
+    txt_clean = open(''.join([path, 'clean_', filename]), 'w+', encoding="utf8")
+    lines = set()
+    for line in txt_file:
+        line = tweet_strip(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(line))))))
+        if len(line):
+            lines.add(line)
+    for line in lines:
+        txt_clean.write(line + '\n')
+
+
 if __name__ == '__main__':
-    clean_tweets('../resources/', 'plus_smile.txt')
+    clean_tweets_without_dubl('../resources/', 'plus_smile.txt')
