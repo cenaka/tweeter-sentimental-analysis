@@ -7,10 +7,12 @@ import os
 from itertools import chain
 from Stemmer import Stemmer
 from tabulate import tabulate
-
+from samples import TRAIN_TWEETS_FILE_NAME
 
 pyximport.install(setup_args={"include_dirs": np.get_include()})
 
+def iter_docs(dir, file_name, encoding="utf-8"):
+    return [open(os.path.join(dir, file_name),encoding=encoding).read()]
 
 def compress(str):
     prev = ""
@@ -124,32 +126,17 @@ def classification_report(y_true, y_pred, labels):
 
 if __name__ == "__main__":
     # 1. Load data.
-    dir = '../resources/'
-    pos_docs = list(open(os.path.join(dir, "clean_plus_smile.txt"),encoding="utf-8").readlines())
-    neg_docs = list(open(os.path.join(dir, "clean_minus_smile.txt"),encoding="utf-8").readlines())
-    pos_docs_test = list(open(os.path.join(dir, "clean_test_plus_smile.txt"),encoding="utf-8").readlines())
-    if len(pos_docs) < len(pos_docs_test):
-        pos_docs_test = pos_docs_test[:len(pos_docs)]
-    else:
-        pos_docs = pos_docs[:len(pos_docs_test)]
-    neg_docs_test = list(open(os.path.join(dir, "clean_test_minus_smile.txt"),encoding="utf-8").readlines())
-    if len(neg_docs) < len(neg_docs_test):
-        neg_docs_test = neg_docs_test[:len(neg_docs)]
-    else:
-        neg_docs = neg_docs[:len(neg_docs_test)]
-    docs_train = np.array(pos_docs + neg_docs)
-    y_train = np.zeros(len(docs_train), dtype=np.bool)
-    y_train[len(pos_docs):] = True
-    docs_test = np.array(pos_docs_test + neg_docs_test)
-    y_test = np.zeros(len(docs_test), dtype=np.bool)
-    y_test[len(pos_docs_test):] = True
+    docs = np.array(open(TRAIN_TWEETS_FILE_NAME, encoding="utf-8").readlines())
+    y = np.zeros(len(docs), dtype=np.bool)
+    y[(len(docs) / 2):] = True
 
     # 2. Preprocess data.
+    docs_train, docs_test, y_train, y_test = train_test_split(docs, y)
     v = TrieVectorizer()
     X_train = v.fit_transform(docs_train)
     X_test = v.transform(docs_test)
 
-    # # 3. Fit model and analyze performance.
+    # 3. Fit model and analyze performance.
     clf = NaiveBayes().fit(X_train, y_train.tolist())
     y_pred = np.array(clf.predict(X_test))
-    classification_report(y_test, y_pred, ["pos", "neg"])
+    classification_report(y_test, y_pred, ["NEG", "POS"])

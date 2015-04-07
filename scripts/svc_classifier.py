@@ -19,7 +19,7 @@ def read_feature_matrix_from_file(file_path):
 
 def generate_answers():
     """
-    Обучающая и тестовая выборки из примера содержат по 100 твитов: первые 50 негативных, вторые 50 негативных
+    Обучающая и тестовая выборки из примера содержат по 100 твитов: первые 50 негативных, вторые 50 позитивных
     """
     return np.concatenate((np.array([NEGATIVE_CLASS] * 50), np.array([POSITIVE_CLASS] * 50)))
 
