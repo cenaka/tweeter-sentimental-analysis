@@ -2,11 +2,12 @@ import numpy as np
 import re
 from sklearn.feature_extraction.text import CountVectorizer
 import datetime
+import csv
 
 # FEATURE_EXTRACTORS
 from samples import TRAIN_TWEETS_FILE_NAME, TRAIN_FEATURES_FILE_NAME, TEST_TWEETS_FILE_NAME, TEST_FEATURES_FILE_NAME, \
     POS_TWEETS_FILE_NAME, NEG_TWEETS_FILE_NAME, TEST_UNIGRAMMS_FEATURES_FILE_NAME, TRAIN_UNIGRAMMS_FEATURES_FILE_NAME, \
-    TEST_OTHER_FEATURES_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME
+    TEST_OTHER_FEATURES_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME, STOP_WORDS
 
 
 def has_exclamation_mark(tweet):
@@ -50,12 +51,13 @@ def delete_nickname(tweet):
 
 
 def extract_uni_features_from_tweets(tweets, test_tweets, output_training_filepath, output_test_filepath):
-    vectorSK = CountVectorizer(min_df=1, max_features=500)
+    stop_words = [line.rstrip() for line in open(STOP_WORDS)]
+    print(stop_words)
+    vectorSK = CountVectorizer(min_df=1, max_features=500, stop_words=stop_words)
     features_matrix = vectorSK.fit_transform([delete_nickname(tweet) for tweet in tweets.readlines()])
     test_matrix = vectorSK.transform(test_tweets.readlines())
     for x in vectorSK.get_feature_names():
         print(x)
-    # print(test_matrix)
     np.savetxt(output_training_filepath, np.array(features_matrix.toarray()), fmt="%d")
     np.savetxt(output_test_filepath, np.array(test_matrix.toarray()), fmt="%d")
 
