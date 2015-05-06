@@ -1,26 +1,23 @@
 __author__ = 'Yuliya'
+import pymorphy2
 from datetime import datetime
 # FEATURE_EXTRACTORS
 from samples import POS_TWEETS_FILE_NAME, NEG_TWEETS_FILE_NAME, DIR_TWEETS_FILES
-
 smiles = [':)', ':-)', ': )', ':D', '=)', '))', ':(', ':-(', ': (', '=(', '((', ')', '(']
-
-#удаляем лишние пробелы
+morph = pymorphy2.MorphAnalyzer()
+DICTIONARY = {}
+# удаляем лишние пробелы
 def tweet_strip(line):
-    line = line.strip().replace('\r', ' ').replace('\t', ' ').replace('\n', ' ').replace('	', ' ')
-    while line.find("  ") > -1:
-        line = line.replace("  ", " ")
-    return line
+    return ' '.join(line.split())
 
-
-#удаляем смайлы, т.к. по ним проходила предварительная выборка
+# удаляем смайлы, т.к. по ним проходила предварительная выборка
 def delete_smile(line):
     for s in smiles:
         line = line.replace(s, '')
     return line
 
 
-#убираем имя пользователя и ссылки на другие имена
+# убираем имя пользователя и ссылки на другие имена
 def clear_of_name(line):
     #имя пользователя идет первым, поэтому просто удаляем всё до пробела
     s, t, line = line.partition(" ")
@@ -38,7 +35,7 @@ def clear_of_link(line):
     while line.find('http') > -1:
         st, p, end = line.partition('http')
         s, p, end = end.partition(" ")
-        line = ' '.join([st, ' *link* ', end])
+        line = ' '.join([st, ' ', end])
     return line
 
 
@@ -46,6 +43,23 @@ def clear_of_link(line):
 def delete_digits(line):
     trans_dict = {ord("{}".format(x)): "" for x in range(10)}
     return line.translate(trans_dict)
+
+
+def normalized_word(word):
+    if DICTIONARY.get(word):
+        return DICTIONARY.get(word)
+    else:
+        normal_form = morph.parse(word)[0].normal_form
+        DICTIONARY[word] = normal_form
+        return normal_form
+
+
+def normalized_tweet(tweet):
+    return " ".join(map(lambda w: normalized_word(w), tweet.split()))
+
+
+def clean_tweet(tweet):
+    return normalized_tweet(tweet_strip(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(tweet)))))))
 
 
 def clean_tweets(path, filename):
@@ -78,5 +92,9 @@ def clean_tweets_without_dubl(path, filename):
 
 
 if __name__ == '__main__':
-    clean_tweets_without_dubl(DIR_TWEETS_FILES, POS_TWEETS_FILE_NAME)
-    clean_tweets_without_dubl(DIR_TWEETS_FILES, NEG_TWEETS_FILE_NAME)
+    #clean_tweets_without_dubl(DIR_TWEETS_FILES, POS_TWEETS_FILE_NAME)
+    #clean_tweets_without_dubl(DIR_TWEETS_FILES, NEG_TWEETS_FILE_NAME)
+    morph = pymorphy2.MorphAnalyzer()
+
+    a = clean_tweet("savva601	@KSyomin  ага, а перед разобранным мостом ещё лежит, для ускорения, огромная куча дерьма в виде... а под мостом кол в виде БРИКС и ШОС! :-))")
+    print(a)
