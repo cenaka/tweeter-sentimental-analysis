@@ -1,11 +1,15 @@
 __author__ = 'Yuliya'
 import pymorphy2
+import re
+
 from datetime import datetime
 # FEATURE_EXTRACTORS
+
 from samples import POS_TWEETS_FILE_NAME, NEG_TWEETS_FILE_NAME, DIR_TWEETS_FILES
 smiles = [':)', ':-)', ': )', ':D', '=)', '))', ':(', ':-(', ': (', '=(', '((', ')', '(']
 morph = pymorphy2.MorphAnalyzer()
 DICTIONARY = {}
+
 # удаляем лишние пробелы
 def tweet_strip(line):
     return ' '.join(line.split())
@@ -21,28 +25,25 @@ def delete_smile(line):
 def clear_of_name(line):
     #имя пользователя идет первым, поэтому просто удаляем всё до пробела
     s, t, line = line.partition(" ")
-    #удаляем все ссылки
-    while line.find('@') > -1:
-        st, p, end = line.partition('@')
-        s, p, end = end.partition(" ")
-        line = ' '.join([st, end])
-    return line
+    #удаляем все ссылки на другие имена
+    return re.sub(r"@[^\s]+", " ", line)
 
 
 #убираем ссылки
 def clear_of_link(line):
     #удаляем все ссылки
-    while line.find('http') > -1:
-        st, p, end = line.partition('http')
-        s, p, end = end.partition(" ")
-        line = ' '.join([st, ' ', end])
-    return line
+    return re.sub(r"http[^\s]+", " ", line)
 
 
 #удаляем цифры
 def delete_digits(line):
     trans_dict = {ord("{}".format(x)): "" for x in range(10)}
     return line.translate(trans_dict)
+
+
+# удаляем все кроме пробелов и букв (удаленное заменяем одинарными пробелами)
+def delete_non_letter(line):
+    return re.sub(r"[^\s\w]+|\d+", " ", line)
 
 
 def normalized_word(word):
@@ -59,7 +60,7 @@ def normalized_tweet(tweet):
 
 
 def clean_tweet(tweet):
-    return normalized_tweet(tweet_strip(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(tweet)))))))
+    return normalized_tweet(tweet_strip(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(tweet))))))
 
 
 def clean_tweets(path, filename):
@@ -69,7 +70,7 @@ def clean_tweets(path, filename):
     # count = 0
     # th = 0
     for line in txt_file:
-        line = tweet_strip(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(line))))))
+        line = tweet_strip(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(line)))))
         if len(line):
             txt_clean.write(line + '\n')
         # count += 1
