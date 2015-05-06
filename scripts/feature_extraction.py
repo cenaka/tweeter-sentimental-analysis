@@ -20,9 +20,16 @@ REPEAT_LETTERS_REGEXP = re.compile(r"(\w)\1\1")
 REPEAT_TWO_LETTERS_REGEXP = re.compile(r"([^\s\d]{2})\1\1")
 REPEAT_THREE_LETTERS_REGEXP = re.compile(r"([^\s\d]{3})\1")
 REPEAT_FOUR_LETTERS_REGEXP = re.compile(r"([^\s\d]{4})\1")
+REPEAT_EXCLAMATION_MARK = re.compile(r"!(!+|1{2})")
 
 def has_exclamation_mark(tweet):
     return int('!' in tweet)
+
+def has_repeat_exclamation_mark(tweet):
+    return int(bool(REPEAT_EXCLAMATION_MARK.search(tweet)))
+
+def has_question_mark(tweet):
+    return int('?' in tweet)
 
 def has_word_not(tweet):
     return int(bool(NO_WORD_REGEXP.search(tweet)))
@@ -45,7 +52,7 @@ def has_tree_repeat_letters(tweet):
 def has_four_repeat_letters(tweet):
     return int(bool(REPEAT_FOUR_LETTERS_REGEXP.search(tweet)))
 
-FEATURE_EXTRACTORS = [has_word_not, has_exclamation_mark, has_url, has_big_word, has_repeat_letters, has_two_repeat_letters, has_tree_repeat_letters, has_four_repeat_letters, len]
+FEATURE_EXTRACTORS = [has_word_not, has_exclamation_mark, has_repeat_exclamation_mark, has_question_mark, has_url, has_big_word, has_repeat_letters, has_two_repeat_letters, has_tree_repeat_letters, has_four_repeat_letters, len]
 # FEATURE EXTRACTION
 
 
