@@ -16,10 +16,11 @@ from tweet_prepare import clean_tweet
 NO_WORD_REGEXP = re.compile(r"\bне\b")
 URL_REGEXP = re.compile(r"http(s)?://")
 BIG_WORDS_REGEXP = re.compile(r"\b[^a-zA-Zа-я\W\s\d]+\b")
-REPEAT_LETTERS_REGEXP = re.compile(r"(\w)\1\1")
+# REPEAT_LETTERS_REGEXP = re.compile(r"(\w)\1\1")
 REPEAT_TWO_LETTERS_REGEXP = re.compile(r"([^\s\d]{2})\1\1")
 REPEAT_THREE_LETTERS_REGEXP = re.compile(r"([^\s\d]{3})\1")
 REPEAT_FOUR_LETTERS_REGEXP = re.compile(r"([^\s\d]{4})\1")
+REPEAT_LETTERS_REGEXP = re.compile(r"([a-zA-Zа-яА-Я])\1\1|([a-zA-Zа-яА-Я][^\s\d])\2\2|([a-zA-Zа-яА-Я][^\s\d]{2})\3|([a-zA-Zа-яА-Я][^\s\d]{3})\4")
 REPEAT_EXCLAMATION_MARK = re.compile(r"!(!+|1{2})")
 
 def has_exclamation_mark(tweet):
@@ -52,7 +53,7 @@ def has_tree_repeat_letters(tweet):
 def has_four_repeat_letters(tweet):
     return int(bool(REPEAT_FOUR_LETTERS_REGEXP.search(tweet)))
 
-FEATURE_EXTRACTORS = [has_word_not, has_exclamation_mark, has_repeat_exclamation_mark, has_question_mark, has_url, has_big_word, has_repeat_letters, has_two_repeat_letters, has_tree_repeat_letters, has_four_repeat_letters, len]
+FEATURE_EXTRACTORS = [has_word_not, has_exclamation_mark, has_repeat_exclamation_mark, has_question_mark, has_url, has_big_word, has_repeat_letters, len]
 # FEATURE EXTRACTION
 
 
