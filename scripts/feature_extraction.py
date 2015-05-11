@@ -77,7 +77,7 @@ def clean_tweets(tweets):
     cleaned_tweets = []
     for i, tweet in enumerate(tweets.readlines()):
         cleaned_tweets.append(clean_tweet(tweet))
-        if i % 1000 == 0:
+        # if i % 1000 == 0:
             # print("cleaned {} tweets".format(i))
     return cleaned_tweets
 
@@ -157,14 +157,14 @@ def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, out
 
 
 def make_all_features_matrix(unigrams_filepath, four_grams_filepath, other_features_filepath, all_features_file_path):
+    four_grams_matrix = io.mmread(four_grams_filepath)
+    print(datetime.datetime.now())
     sparse_features_matrix = sparse.csr_matrix(np.loadtxt(other_features_filepath))
     unigrams_matrix = io.mmread(unigrams_filepath)
     print(datetime.datetime.now())
     all_features = sp.hstack([sparse_features_matrix, unigrams_matrix])
     del unigrams_matrix
     del sparse_features_matrix
-    print(datetime.datetime.now())
-    four_grams_matrix = io.mmread(four_grams_filepath)
     print(datetime.datetime.now())
     all_features = sp.hstack([all_features, four_grams_matrix])
     del four_grams_matrix
