@@ -1,4 +1,5 @@
 TRAIN_TWEETS_FILE_NAME = "../resources/training_set.txt"
+TRAIN_CLEAN_TWEETS_FILE_NAME = "../resources/training_clean_set.txt"
 #TRAIN_TWEETS_FILE_NAME = "resources/mini_training_set.txt"
 STOP_WORDS = "../resources/stop-words.txt"
 TRAIN_FOUR_GRAMMS_FEATURES_FILE_NAME = "../resources/four_grams_training_feature_matrix.mtx"
@@ -9,6 +10,7 @@ TRAIN_OTHER_FEATURES_FILE_NAME = "../resources/other_training_feature_matrix.txt
 TEST_OTHER_FEATURES_FILE_NAME = "../resources/other_test_feature_matrix.txt"
 TRAIN_FEATURES_FILE_NAME = "../resources/all_training_features.mtx"
 TEST_TWEETS_FILE_NAME = "../resources/test_set.txt"
+TEST_CLEAN_TWEETS_FILE_NAME = "../resources/test_clean_set.txt"
 TEST_FEATURES_FILE_NAME = "../resources/all_test_features.mtx"
 POS_TWEETS_FILE_NAME = "resources/rus_twits_pos.txt"
 NEG_TWEETS_FILE_NAME = "resources/rus_twits_neg.txt"

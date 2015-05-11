@@ -10,7 +10,7 @@ import sys
 from samples import TRAIN_TWEETS_FILE_NAME, TRAIN_FEATURES_FILE_NAME, TEST_TWEETS_FILE_NAME, TEST_FEATURES_FILE_NAME, \
     POS_TWEETS_FILE_NAME, NEG_TWEETS_FILE_NAME, TEST_UNIGRAMMS_FEATURES_FILE_NAME, TRAIN_UNIGRAMMS_FEATURES_FILE_NAME, \
     TEST_OTHER_FEATURES_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME, STOP_WORDS, TRAIN_FOUR_GRAMMS_FEATURES_FILE_NAME, \
-    TEST_FOUR_GRAMMS_FEATURES_FILE_NAME
+    TEST_FOUR_GRAMMS_FEATURES_FILE_NAME, TRAIN_CLEAN_TWEETS_FILE_NAME, TEST_CLEAN_TWEETS_FILE_NAME
 
 from tweet_prepare import clean_tweet
 
@@ -83,9 +83,9 @@ def clean_tweets(tweets):
 
 
 def extract_four_gram_features_from_tweets(tweets, test_tweets, output_training_filepath, output_test_filepath):
-    vectorSK = CountVectorizer(ngram_range=(4, 4), analyzer="char", min_df=1, max_features=5000)
-    features_matrix = vectorSK.fit_transform(clean_tweets(tweets))
-    test_matrix = vectorSK.transform(clean_tweets(test_tweets))
+    vectorSK = CountVectorizer(ngram_range=(4, 4), analyzer="char", min_df=1)
+    features_matrix = vectorSK.fit_transform(tweets)
+    test_matrix = vectorSK.transform(test_tweets)
     print(len(vectorSK.get_feature_names()))
     io.mmwrite(output_training_filepath, features_matrix)
     print("four grams training matrix dumped")
@@ -98,8 +98,8 @@ def extract_uni_features_from_tweets(tweets, test_tweets, output_training_filepa
     # print(stop_words)
     # vectorSK = CountVectorizer(min_df=1, stop_words=stop_words)
     vectorSK = CountVectorizer(min_df=1)
-    features_matrix = vectorSK.fit_transform(clean_tweets(tweets))
-    test_matrix = vectorSK.transform(clean_tweets(test_tweets))
+    features_matrix = vectorSK.fit_transform(tweets)
+    test_matrix = vectorSK.transform(test_tweets)
     #for x in vectorSK.get_feature_names():
     #    print(x)
     print(len(vectorSK.get_feature_names()))
@@ -128,16 +128,19 @@ def extract_and_dump_four_gram_features(input_filepath, output_filepath, input_t
         output_filepath, output_test_filepath)
 
 
-def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, output_test_file, training_set_size,
+def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, output_test_file,
+                               output_clean_training_file, output_clean_test_file, training_set_size,
                                test_set_size):
     added_tweets = 0
     for tweet in pos_tweets:
         added_tweets += 1
         if training_set_size >= added_tweets:
             output_training_file.write(tweet)
+            output_clean_training_file.write(clean_tweet(tweet))
         else:
             if training_set_size + test_set_size >= added_tweets:
                 output_test_file.write(tweet)
+                output_clean_test_file.write(clean_tweet(tweet))
             else:
                 print(added_tweets)
                 break
@@ -147,9 +150,11 @@ def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, out
         added_tweets += 1
         if training_set_size >= added_tweets:
             output_training_file.write(tweet)
+            output_clean_training_file.write(clean_tweet(tweet))
         else:
             if training_set_size + test_set_size >= added_tweets:
                 output_test_file.write(tweet)
+                output_clean_test_file.write(clean_tweet(tweet))
             else:
                 print(added_tweets)
                 break
@@ -173,15 +178,16 @@ def make_all_features_matrix(unigrams_filepath, four_grams_filepath, other_featu
 
 
 if __name__ == '__main__':
-    # make_test_and_training_set(open(POS_TWEETS_FILE_NAME, encoding="utf8"), open(NEG_TWEETS_FILE_NAME, encoding="utf8"),
-    #                   open(TRAIN_TWEETS_FILE_NAME, 'w', encoding="utf8"), open(TEST_TWEETS_FILE_NAME, 'w', encoding="utf8"), 180000, 30000)
-    # time = datetime.datetime.now()
-    # extract_and_dump_features(TRAIN_TWEETS_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME)
-    # extract_and_dump_features(TEST_TWEETS_FILE_NAME, TEST_OTHER_FEATURES_FILE_NAME)
-    # extract_and_dump_unigram_features(TRAIN_TWEETS_FILE_NAME, TRAIN_UNIGRAMMS_FEATURES_FILE_NAME, TEST_TWEETS_FILE_NAME,
-    #                                   TEST_UNIGRAMMS_FEATURES_FILE_NAME)
-    # extract_and_dump_four_gram_features(TRAIN_TWEETS_FILE_NAME, TRAIN_FOUR_GRAMMS_FEATURES_FILE_NAME, TEST_TWEETS_FILE_NAME,
-    #                                   TEST_FOUR_GRAMMS_FEATURES_FILE_NAME)
+    make_test_and_training_set(open(POS_TWEETS_FILE_NAME, encoding="utf8"), open(NEG_TWEETS_FILE_NAME, encoding="utf8"),
+                        open(TRAIN_TWEETS_FILE_NAME, 'w', encoding="utf8"), open(TEST_TWEETS_FILE_NAME, 'w', encoding="utf8"),
+                      open(TRAIN_CLEAN_TWEETS_FILE_NAME, 'w', encoding="utf8"), open(TEST_CLEAN_TWEETS_FILE_NAME, 'w', encoding="utf8"), 180000, 30000)
+    time = datetime.datetime.now()
+    extract_and_dump_features(TRAIN_TWEETS_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME)
+    extract_and_dump_features(TEST_TWEETS_FILE_NAME, TEST_OTHER_FEATURES_FILE_NAME)
+    extract_and_dump_unigram_features(TRAIN_CLEAN_TWEETS_FILE_NAME, TRAIN_UNIGRAMMS_FEATURES_FILE_NAME, TEST_CLEAN_TWEETS_FILE_NAME,
+                                      TEST_UNIGRAMMS_FEATURES_FILE_NAME)
+    extract_and_dump_four_gram_features(TRAIN_CLEAN_TWEETS_FILE_NAME, TRAIN_FOUR_GRAMMS_FEATURES_FILE_NAME, TEST_CLEAN_TWEETS_FILE_NAME,
+                                      TEST_FOUR_GRAMMS_FEATURES_FILE_NAME)
 
     # make_all_features_matrix(TEST_FOUR_GRAMMS_FEATURES_FILE_NAME, TEST_OTHER_FEATURES_FILE_NAME, TEST_FEATURES_FILE_NAME)
     make_all_features_matrix(TRAIN_UNIGRAMMS_FEATURES_FILE_NAME, TRAIN_FOUR_GRAMMS_FEATURES_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME, TRAIN_FEATURES_FILE_NAME)
