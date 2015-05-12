@@ -20,7 +20,6 @@ URL_REGEXP = re.compile(r"http(s)?://")
 BIG_WORDS_REGEXP = re.compile(r"\b[^a-zA-Zа-я\W\s\d]+\b")
 REPEAT_LETTERS_REGEXP = re.compile(r"([a-zA-Zа-яА-Я])\1\1|([a-zA-Zа-яА-Я][^\s\d])\2\2|([a-zA-Zа-яА-Я][^\s\d]{2})\3|([a-zA-Zа-яА-Я][^\s\d]{3})\4")
 REPEAT_EXCLAMATION_MARK = re.compile(r"!(!+|1{2})")
-MENTION_REGEXP = re.compile(r"\b@")
 
 def has_exclamation_mark(tweet):
     return int('!' in tweet)
@@ -103,6 +102,8 @@ def extract_uni_features_from_tweets(tweets, test_tweets, output_training_file_p
     print("unigrams training matrix dumped")
     io.mmwrite(output_test_file_path, test_matrix)
     print("unigrams test matrix dumped")
+    #np.savetxt(output_training_filepath, np.array(features_matrix.toarray()), fmt="%d")
+    #np.savetxt(output_test_filepath, np.array(test_matrix.toarray()), fmt="%d")
 
 
 def extract_bigram_features_from_tweets(tweets, test_tweets, output_training_file_path, output_test_file_path):
@@ -190,4 +191,7 @@ if __name__ == '__main__':
                              TRAIN_FEATURES_FILE_NAME)
     print("training features matrix made")
     print("extract features: seconds_passed: %s" % (datetime.datetime.now() - time).total_seconds())
+
+# paste other_training_feature_matrix.txt unigrams_training_feature_matrix.txt > all_training_features.txt
+# paste other_test_feature_matrix.txt unigrams_test_feature_matrix.txt > all_test_features.txt
 
