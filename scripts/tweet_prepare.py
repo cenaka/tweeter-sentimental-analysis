@@ -41,6 +41,13 @@ def delete_digits(line):
     return line.translate(trans_dict)
 
 
+#удаляем повторения букв "аааа"
+def delete_repeat(line):
+    while bool(re.compile(r"([a-zA-Zа-яА-Я])\1").search(line)):
+        line = re.sub(r"([a-zA-Zа-яА-Я])\1", r"\1", line)
+    return line
+
+
 # удаляем все кроме пробелов и букв (удаленное заменяем одинарными пробелами)
 def delete_non_letter(line):
     return re.sub(r"[^\s\w]+|\d+", " ", line)
@@ -60,7 +67,7 @@ def normalized_tweet(tweet):
 
 
 def clean_tweet(tweet):
-    return normalized_tweet(tweet_strip(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(tweet))))))
+    return normalized_tweet(delete_repeat(tweet_strip(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(tweet)))))))
 
 
 def clean_tweets(path, filename):
@@ -70,7 +77,7 @@ def clean_tweets(path, filename):
     # count = 0
     # th = 0
     for line in txt_file:
-        line = tweet_strip(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(line)))))
+        line = tweet_strip(delete_repeat(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(line))))))
         if len(line):
             txt_clean.write(line + '\n')
         # count += 1
@@ -85,7 +92,7 @@ def clean_tweets_without_dubl(path, filename):
     txt_clean = open(''.join([path, 'clean_', filename]), 'w+', encoding="utf8")
     lines = set()
     for line in txt_file:
-        line = tweet_strip(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(line))))))
+        line = tweet_strip(delete_repeat(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(line)))))))
         if len(line):
             lines.add(line)
     for line in lines:
