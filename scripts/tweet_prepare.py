@@ -43,8 +43,8 @@ def delete_digits(line):
 
 #удаляем повторения букв "аааа"
 def delete_repeat(line):
-    while bool(re.compile(r"([a-zA-Zа-яА-Я])\1").search(line)):
-        line = re.sub(r"([a-zA-Zа-яА-Я])\1", r"\1", line)
+    while bool(re.compile(r"([a-zA-Zа-яА-Я])\1\1").search(line)):
+        line = re.sub(r"([a-zA-Zа-яА-Я])\1\1", r"\1\1", line)
     return line
 
 
