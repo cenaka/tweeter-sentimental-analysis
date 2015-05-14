@@ -1,6 +1,11 @@
 __author__ = 'Yuliya'
 import pymorphy2
+import numpy as np
 import re
+from sklearn.feature_extraction.text import CountVectorizer
+import scipy.sparse as sp
+from scipy import sparse, io
+import datetime
 
 from datetime import datetime
 # FEATURE_EXTRACTORS
@@ -35,6 +40,16 @@ def clear_of_link(line):
     return re.sub(r"http[^\s]+", " ", line)
 
 
+#склеиваем частицу "не" со словом, идущим после нее
+def glue_of_no(line):
+    return re.sub(r"\bне\s", "не", line)
+
+
+#убираем предлоги, союзы и т.п.
+def clear_of_particles(line):
+    return re.sub(r"\bи\b|\bа\b|\bну\b|\bперед\b|\bпосле\b|\bчерез\b|\bза\b|\bнад\b|\bно\b|\bв\b|\bпод\b|\bу\b|\bк\b|\bс\b|\bпо\b|\bдо\b|\bбы\b|\bни\b|\bвот\b|\bна\b|\bво\b|\bли\b|\bсо\b", "", line)
+
+
 #удаляем цифры
 def delete_digits(line):
     trans_dict = {ord("{}".format(x)): "" for x in range(10)}
@@ -67,7 +82,7 @@ def normalized_tweet(tweet):
 
 
 def clean_tweet(tweet):
-    return normalized_tweet(delete_repeat(tweet_strip(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(tweet)))))))
+    return tweet_strip(clear_of_particles(glue_of_no(normalized_tweet(delete_repeat(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(tweet)))))))))
 
 
 def clean_tweets(path, filename):
@@ -77,7 +92,7 @@ def clean_tweets(path, filename):
     # count = 0
     # th = 0
     for line in txt_file:
-        line = tweet_strip(delete_repeat(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(line))))))
+        line = tweet_strip(clear_of_particles(glue_of_no(delete_repeat(delete_non_letter(clear_of_link(clear_of_name(tweet_strip(line))))))))
         if len(line):
             txt_clean.write(line + '\n')
         # count += 1
@@ -92,7 +107,7 @@ def clean_tweets_without_dubl(path, filename):
     txt_clean = open(''.join([path, 'clean_', filename]), 'w+', encoding="utf8")
     lines = set()
     for line in txt_file:
-        line = tweet_strip(delete_repeat(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(line)))))))
+        line = tweet_strip(clear_of_particles(glue_of_no(delete_repeat(delete_digits(delete_smile(clear_of_link(clear_of_name(tweet_strip(line)))))))))
         if len(line):
             lines.add(line)
     for line in lines:
@@ -104,5 +119,16 @@ if __name__ == '__main__':
     #clean_tweets_without_dubl(DIR_TWEETS_FILES, NEG_TWEETS_FILE_NAME)
     morph = pymorphy2.MorphAnalyzer()
 
-    a = clean_tweet("savva601	@KSyomin  ага, а перед разобранным мостом ещё лежит, для ускорения, огромная куча дерьма в виде... а под мостом кол в виде БРИКС и ШОС! :-))")
+    a = clean_tweet("AndrewZu	@blyelldill боюсь спросить, почему они зеленые?))")
     print(a)
+    vectorSK = CountVectorizer(min_df=1)
+    features_matrix = vectorSK.fit([a])
+    print(features_matrix.get_feature_names())
+
+    vectorSK = CountVectorizer(ngram_range=(2, 2), min_df=1)
+    features_matrix = vectorSK.fit([a])
+    print(features_matrix.get_feature_names())
+
+    vectorSK = CountVectorizer(ngram_range=(4, 4), analyzer="char", min_df=1)
+    features_matrix = vectorSK.fit([a])
+    print(features_matrix.get_feature_names())
