@@ -43,8 +43,8 @@ def delete_digits(line):
 
 #удаляем повторения букв "аааа"
 def delete_repeat(line):
-    while bool(re.compile(r"([a-zA-Zа-яА-Я])\1").search(line)):
-        line = re.sub(r"([a-zA-Zа-яА-Я])\1", r"\1", line)
+    while bool(re.compile(r"([a-zA-Zа-яА-Я])\1\1").search(line)):
+        line = re.sub(r"([a-zA-Zа-яА-Я])\1\1", r"\1\1", line)
     return line
 
 
@@ -104,5 +104,6 @@ if __name__ == '__main__':
     #clean_tweets_without_dubl(DIR_TWEETS_FILES, NEG_TWEETS_FILE_NAME)
     morph = pymorphy2.MorphAnalyzer()
 
-    a = clean_tweet("savva601	@KSyomin  ага, а перед разобранным мостом ещё лежит, для ускорения, огромная куча дерьма в виде... а под мостом кол в виде БРИКС и ШОС! :-))")
+    a = clean_tweet("savva601 сломленных	ааааа @KSyomin  ага, а перед разобранным мостом ещё лежит, для ускорения, огромная куча дерьма в виде... а под мостом кол в виде БРИКС и ШОС! :-))")
+    a = clean_tweet("barabanlyna	@I_need_a_beach о да\nЭто жопа((")
     print(a)

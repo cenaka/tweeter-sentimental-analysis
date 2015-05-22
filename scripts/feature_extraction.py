@@ -10,7 +10,8 @@ import sys
 from samples import TRAIN_TWEETS_FILE_NAME, TRAIN_FEATURES_FILE_NAME, TEST_TWEETS_FILE_NAME, TEST_FEATURES_FILE_NAME, \
     POS_TWEETS_FILE_NAME, NEG_TWEETS_FILE_NAME, UNIGRAMMS_TEST_FEATURES_FILE_NAME, UNIGRAMMS_TRAIN_FEATURES_FILE_NAME, \
     TEST_OTHER_FEATURES_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME, STOP_WORDS, BIGRAMMS_TEST_FEATURES_FILE_NAME,\
-    BIGRAMMS_TRAIN_FEATURES_FILE_NAME, FOUR_GRAMMS_TEST_FEATURES_FILE_NAME, FOUR_GRAMMS_TRAIN_FEATURES_FILE_NAME
+    BIGRAMMS_TRAIN_FEATURES_FILE_NAME, FOUR_GRAMMS_TEST_FEATURES_FILE_NAME, FOUR_GRAMMS_TRAIN_FEATURES_FILE_NAME,\
+    MANUAL_TAGGING_TEST_SET_WITH_SMILES, NEUT_TWEETS_FILE_NAME
 
 from tweet_prepare import clean_tweet
 
@@ -20,7 +21,7 @@ URL_REGEXP = re.compile(r"http(s)?://")
 BIG_WORDS_REGEXP = re.compile(r"\b[^a-zA-Zа-я\W\s\d]+\b")
 REPEAT_LETTERS_REGEXP = re.compile(r"([a-zA-Zа-яА-Я])\1\1|([a-zA-Zа-яА-Я][^\s\d])\2\2|([a-zA-Zа-яА-Я][^\s\d]{2})\3|([a-zA-Zа-яА-Я][^\s\d]{3})\4")
 REPEAT_EXCLAMATION_MARK = re.compile(r"!(!+|1{2})")
-
+MENTION_REGEXP = re.compile(r"\b@")
 def has_exclamation_mark(tweet):
     return int('!' in tweet)
 
@@ -67,7 +68,7 @@ def extract_features_from_tweets(tweets, output_file):
         tweet_number += 1
         output_file.write(" ".join(map(str, extract_features_from_tweet(tweet))))
         output_file.write("\n")
-        if tweet_number % 100000 == 0:
+        if tweet_number % 10000 == 0:
             print(tweet_number)
 
 
@@ -102,9 +103,6 @@ def extract_uni_features_from_tweets(tweets, test_tweets, output_training_file_p
     print("unigrams training matrix dumped")
     io.mmwrite(output_test_file_path, test_matrix)
     print("unigrams test matrix dumped")
-    #np.savetxt(output_training_filepath, np.array(features_matrix.toarray()), fmt="%d")
-    #np.savetxt(output_test_filepath, np.array(test_matrix.toarray()), fmt="%d")
-
 
 def extract_bigram_features_from_tweets(tweets, test_tweets, output_training_file_path, output_test_file_path):
     vectorSK = CountVectorizer(ngram_range=(2, 2), min_df=1)
@@ -131,16 +129,16 @@ def extract_four_gram_features_from_tweets(tweets, test_tweets, output_training_
 def extract_and_dump_ngram_features(input_file_path, input_test_file_path):
     clean_training_tweets = clean_tweets(open(input_file_path))
     clean_test_tweets = clean_tweets(open(input_test_file_path))
-    #extract_uni_features_from_tweets(clean_training_tweets, clean_test_tweets,
-    #                                 UNIGRAMMS_TRAIN_FEATURES_FILE_NAME, UNIGRAMMS_TEST_FEATURES_FILE_NAME)
+    extract_uni_features_from_tweets(clean_training_tweets, clean_test_tweets,
+                                     UNIGRAMMS_TRAIN_FEATURES_FILE_NAME, UNIGRAMMS_TEST_FEATURES_FILE_NAME)
     #extract_four_gram_features_from_tweets(clean_training_tweets, clean_test_tweets,
     #                                FOUR_GRAMMS_TRAIN_FEATURES_FILE_NAME, FOUR_GRAMMS_TEST_FEATURES_FILE_NAME)
     extract_bigram_features_from_tweets(clean_training_tweets, clean_test_tweets,
                                         BIGRAMMS_TRAIN_FEATURES_FILE_NAME, BIGRAMMS_TEST_FEATURES_FILE_NAME)
 
 
-def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, output_test_file, training_set_size,
-                               test_set_size):
+def make_test_and_training_set(pos_tweets, neg_tweets, neut_tweets, output_training_file, output_test_file,
+                               training_set_size, test_set_size):
     added_tweets = 0
     for tweet in pos_tweets:
         added_tweets += 1
@@ -152,6 +150,7 @@ def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, out
             else:
                 print(added_tweets)
                 break
+    print("length %d", training_set_size)
     added_tweets = 0
     for tweet in neg_tweets:
         added_tweets += 1
@@ -163,6 +162,16 @@ def make_test_and_training_set(pos_tweets, neg_tweets, output_training_file, out
             else:
                 print(added_tweets)
                 break
+    added_tweets = 0
+    for tweet in neut_tweets:
+        added_tweets += 1
+        if training_set_size >= added_tweets:
+            output_training_file.write(tweet)
+        else:
+            if training_set_size + test_set_size >= added_tweets:
+                output_test_file.write(tweet)
+            else:
+                break
 
 
 def make_all_features_matrix(unigrams_file_path, bigrams_file_path, four_grams_file_path,
@@ -171,18 +180,23 @@ def make_all_features_matrix(unigrams_file_path, bigrams_file_path, four_grams_f
     sparse_features_matrix = sparse.csr_matrix(np.loadtxt(other_features_file_path))
     unigrams_matrix = io.mmread(unigrams_file_path)
     bigrams_matrix = io.mmread(bigrams_file_path)
-    four_grams_matrix = io.mmread(four_grams_file_path)
-    all_features = sp.hstack([unigrams_matrix, bigrams_matrix])
+    #four_grams_matrix = io.mmread(four_grams_file_path)
+    all_features = sp.hstack([unigrams_matrix, bigrams_matrix, sparse_features_matrix])
     io.mmwrite(all_features_file_path, all_features)
 
 
 if __name__ == '__main__':
+    # Создаем обучающую и тестовую выборку
     make_test_and_training_set(open(POS_TWEETS_FILE_NAME, encoding="utf8"), open(NEG_TWEETS_FILE_NAME, encoding="utf8"),
-                      open(TRAIN_TWEETS_FILE_NAME, 'w'), open(TEST_TWEETS_FILE_NAME, 'w'), 4000000, 100000)
+                     open(NEUT_TWEETS_FILE_NAME), open(TRAIN_TWEETS_FILE_NAME, 'w'), open(TEST_TWEETS_FILE_NAME, 'w'),
+                     2000000, 100000)
     time = datetime.datetime.now()
+    # Выделяем наши факторы
     extract_and_dump_features(TRAIN_TWEETS_FILE_NAME, TRAIN_OTHER_FEATURES_FILE_NAME)
     extract_and_dump_features(TEST_TWEETS_FILE_NAME, TEST_OTHER_FEATURES_FILE_NAME)
+    # Выделяем N-граммы
     extract_and_dump_ngram_features(TRAIN_TWEETS_FILE_NAME, TEST_TWEETS_FILE_NAME)
+    # Склеиваем матрицу факторов и матрицы n-грамм.
     make_all_features_matrix(UNIGRAMMS_TEST_FEATURES_FILE_NAME, BIGRAMMS_TEST_FEATURES_FILE_NAME,
                              FOUR_GRAMMS_TEST_FEATURES_FILE_NAME, TEST_OTHER_FEATURES_FILE_NAME, TEST_FEATURES_FILE_NAME)
     print("test features matrix made")
@@ -191,7 +205,4 @@ if __name__ == '__main__':
                              TRAIN_FEATURES_FILE_NAME)
     print("training features matrix made")
     print("extract features: seconds_passed: %s" % (datetime.datetime.now() - time).total_seconds())
-
-# paste other_training_feature_matrix.txt unigrams_training_feature_matrix.txt > all_training_features.txt
-# paste other_test_feature_matrix.txt unigrams_test_feature_matrix.txt > all_test_features.txt
 
