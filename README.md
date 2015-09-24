@@ -1,2 +1,1 @@
 # tweeter-sentimental-analysis
-блабла
